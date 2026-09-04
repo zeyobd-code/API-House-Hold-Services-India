@@ -46,7 +46,13 @@ async function bootstrap() {
 
     // Enable CORS
     appInstance.enableCors({
-      origin: true,
+      origin: (origin, callback) => {
+        if (!origin || origin.includes('rajseba.in') || process.env.NODE_ENV !== 'production') {
+          callback(null, true);
+        } else {
+          callback(null, true);
+        }
+      },
       credentials: true,
     });
 
