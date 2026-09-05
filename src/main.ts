@@ -88,7 +88,7 @@ async function bootstrap() {
 // Local standalone listener
 if (!process.env.VERCEL) {
   bootstrap().then(() => {
-    const port = process.env.PORT || 8000;
+    const port = process.env.PORT || 3000;
     server.listen(port, () => {
       console.log(`Server running locally on port ${port}`);
     });
