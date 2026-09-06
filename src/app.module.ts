@@ -49,7 +49,9 @@ import { UploadModule } from './upload/upload.module';
         autoLoadEntities: true,
         synchronize: true, // Auto-sync tables in all environments since migrations are not configured
         logging: false, // Turn off DB logging in performance mode
-        ssl: { rejectUnauthorized: false }, // Essential for Neon PostgreSQL SSL stability in serverless/cloud environments
+        ssl: configService.get<string>('DATABASE_SSL') === 'false'
+          ? false
+          : { rejectUnauthorized: false },
         extra: {
           max: 25, // Expanded connection pool to easily handle 3000+ concurrent user request bursts
           min: 5,   // Maintain warm min connection pool for instantaneous query execution

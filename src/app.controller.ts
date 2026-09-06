@@ -11,11 +11,12 @@ export class AppController {
   }
 
   @Get('health')
-  healthCheck() {
+  health() {
     return {
-      status: 'success',
-      message: 'API is up and running!',
+      status: 'ok',
       timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV,
     };
   }
 
