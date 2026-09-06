@@ -51,9 +51,11 @@ import { UploadModule } from './upload/upload.module';
         logging: false, // Turn off DB logging in performance mode
         ssl: { rejectUnauthorized: false }, // Essential for Neon PostgreSQL SSL stability in serverless/cloud environments
         extra: {
-          max: 10, // Serverless functions work better with smaller pool limits per instance
+          max: 25, // Expanded connection pool to easily handle 3000+ concurrent user request bursts
+          min: 5,   // Maintain warm min connection pool for instantaneous query execution
           idleTimeoutMillis: 30000,
           connectionTimeoutMillis: 10000, // Give Neon serverless cold start enough time (10s) to awaken without throwing instant 500 error
+          statement_timeout: 15000, // Terminate stuck DB queries after 15s to keep backend worker threads responsive
         },
       }),
       inject: [ConfigService],
@@ -61,13 +63,13 @@ import { UploadModule } from './upload/upload.module';
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 12000, // High rate limit to avoid slowing down API responses
+        limit: 20000, // Raised rate limit threshold for heavy concurrent user bursts
       },
     ]),
     CacheModule.register({
       isGlobal: true,
-      ttl: 300000, // Increase cache TTL to 5 minutes for faster data delivery
-      max: 500, // Limit maximum cached items in memory
+      ttl: 300000, // 5 minutes cache TTL
+      max: 2000, // Expanded cache capacity for high traffic scale
     }),
     UsersModule,
     AuthModule,
