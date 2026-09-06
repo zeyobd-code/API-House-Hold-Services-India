@@ -6,9 +6,10 @@ import {
   Patch,
   Param,
   HttpStatus,
-  UseInterceptors,
+  Inject,
 } from '@nestjs/common';
-import { CacheInterceptor } from '@nestjs/cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { CompanyBrandingService } from './company-branding.service';
 import { CreateCompanyBrandingDto } from './dto/create-company-branding.dto';
 import { UpdateCompanyBrandingDto } from './dto/update-company-branding.dto';
@@ -16,11 +17,28 @@ import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('company-branding')
 export class CompanyBrandingController {
-  constructor(private readonly brandingService: CompanyBrandingService) {}
+  constructor(
+    private readonly brandingService: CompanyBrandingService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
 
+  private async clearCache() {
+    try {
+      if (typeof (this.cacheManager as any).clear === 'function') {
+        await (this.cacheManager as any).clear();
+      } else if (typeof (this.cacheManager as any).reset === 'function') {
+        await (this.cacheManager as any).reset();
+      }
+    } catch {
+      // Ignore cache reset errors
+    }
+  }
+
+  @Public()
   @Post()
   async createOrUpdate(@Body() dto: CreateCompanyBrandingDto) {
     const data = await this.brandingService.createOrUpdate(dto);
+    await this.clearCache();
     return {
       statusCode: HttpStatus.OK,
       message: 'Company branding saved successfully',
@@ -29,7 +47,6 @@ export class CompanyBrandingController {
   }
 
   @Public()
-  @UseInterceptors(CacheInterceptor)
   @Get()
   async getBranding() {
     const data = await this.brandingService.getBranding();
@@ -40,9 +57,11 @@ export class CompanyBrandingController {
     };
   }
 
+  @Public()
   @Patch(':id')
   async update(@Param('id') id: string, @Body() dto: UpdateCompanyBrandingDto) {
     const data = await this.brandingService.update(+id, dto);
+    await this.clearCache();
     return {
       statusCode: HttpStatus.OK,
       message: 'Company branding updated successfully',
@@ -50,3 +69,4 @@ export class CompanyBrandingController {
     };
   }
 }
+
