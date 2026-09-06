@@ -1,10 +1,14 @@
+require('dotenv').config();
 const { Client } = require('pg');
 const bcrypt = require('bcrypt');
 
-const dbUrl = 'postgresql://neondb_owner:npg_nvPhcRFD2Gd0@ep-calm-math-ay3nlp28-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require';
+const dbUrl = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_gl0P9YTwfSBy@ep-small-breeze-aeogdsbl-pooler.c-2.us-east-2.aws.neon.tech/neondb';
 
 async function seedSuperAdmin() {
-  const client = new Client({ connectionString: dbUrl });
+  const client = new Client({
+    connectionString: dbUrl,
+    ssl: { rejectUnauthorized: false }
+  });
   try {
     await client.connect();
     console.log('Connected to Neon DB');
@@ -25,8 +29,8 @@ async function seedSuperAdmin() {
     }
 
     // 2. Hash password
-    const email = 'admin@rajseba.com';
-    const password = 'adminpassword123';
+    const email = 'admin@rajseba.in';
+    const password = 'AdminPassword123!';
     const hashedPassword = await bcrypt.hash(password, 10);
     const phone = '01700000000';
     const name = 'Super Admin';
@@ -48,7 +52,7 @@ async function seedSuperAdmin() {
     }
 
     console.log('\n=======================================');
-    console.log('SUCCESS! Super Admin Created');
+    console.log('SUCCESS! Super Admin Credentials:');
     console.log('Email:', email);
     console.log('Password:', password);
     console.log('=======================================\n');
