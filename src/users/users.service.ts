@@ -186,6 +186,14 @@ export class UsersService {
     });
   }
 
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    if (!googleId) return null;
+    return this.userRepository.findOne({
+      where: { googleId },
+      relations: { role: true },
+    });
+  }
+
   async findByEmailOrPhone(identifier: string): Promise<User | null> {
     if (!identifier) return null;
     return this.userRepository.findOne({

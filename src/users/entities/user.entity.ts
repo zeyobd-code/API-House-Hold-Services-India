@@ -39,6 +39,12 @@ export class User {
   @Column({ nullable: true })
   password: string;
 
+  @Column({ nullable: true, unique: true })
+  googleId: string;
+
+  @Column({ nullable: true })
+  avatar: string;
+
   @ManyToOne(() => Role, (role) => role.users, { nullable: true })
   @JoinColumn({ name: 'roleId' })
   role: Role;

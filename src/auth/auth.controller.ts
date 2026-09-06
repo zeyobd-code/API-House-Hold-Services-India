@@ -1,13 +1,18 @@
 import {
   Controller,
   Post,
+  Get,
+  Query,
   Body,
   HttpCode,
   HttpStatus,
   UseGuards,
   Request,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
+import { GoogleAuthService } from './google-auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -15,7 +20,10 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly googleAuthService: GoogleAuthService,
+  ) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -37,6 +45,41 @@ export class AuthController {
       message: 'Login successful',
       data,
     };
+  }
+
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  async googleLogin(@Body('idToken') idToken: string, @Body('token') token: string) {
+    const googleToken = idToken || token;
+    const data = await this.googleAuthService.googleLoginWithToken(googleToken);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Google login successful',
+      data,
+    };
+  }
+
+  @Get('google/callback')
+  async googleCallback(
+    @Query('code') code: string,
+    @Res() res: Response,
+  ) {
+    const frontendUrl = process.env.FRONTEND_URL || 'https://rajseba.in';
+    const redirectUri = 'https://api.rajseba.in/api/auth/google/callback';
+
+    try {
+      const data = await this.googleAuthService.googleCallbackAuth(code, redirectUri);
+      const userRole = data.user?.role?.name || 'client';
+      const roleString = userRole.toLowerCase().replace(/\s+/g, '');
+
+      return res.redirect(
+        `${frontendUrl}/auth/callback?token=${data.accessToken}&refreshToken=${data.refreshToken}&role=${roleString}`
+      );
+    } catch (err: any) {
+      return res.redirect(
+        `${frontendUrl}/login?error=${encodeURIComponent(err.message || 'Google Auth Failed')}`
+      );
+    }
   }
 
   @Post('refresh-token')
