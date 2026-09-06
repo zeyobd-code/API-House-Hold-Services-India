@@ -60,12 +60,13 @@ export class AuthController {
   }
 
   @Get('google/callback')
+  @Get('/api/auth/google/callback')
   async googleCallback(
     @Query('code') code: string,
     @Res() res: Response,
   ) {
     const frontendUrl = process.env.FRONTEND_URL || 'https://rajseba.in';
-    const redirectUri = 'https://api.rajseba.in/api/auth/google/callback';
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'https://api.rajseba.in/api/auth/google/callback';
 
     try {
       const data = await this.googleAuthService.googleCallbackAuth(code, redirectUri);

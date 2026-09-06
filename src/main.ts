@@ -16,9 +16,6 @@ async function bootstrap() {
     cors: true,
   });
 
-  // Set global prefix for all routes (/api/...)
-  app.setGlobalPrefix('api');
-
   // ============ Static Assets (uploads) ============
   try {
     const uploadsDir = path.join(process.cwd(), 'uploads');
