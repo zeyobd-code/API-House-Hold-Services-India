@@ -10,7 +10,9 @@ import {
   UseGuards,
   Req,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
 import { ServiceService } from './service.service';
@@ -33,6 +35,7 @@ export class ServiceController {
   }
 
   @Public()
+  @UseInterceptors(CacheInterceptor)
   @Get('public')
   async findAllPublic() {
     try {

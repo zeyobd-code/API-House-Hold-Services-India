@@ -8,7 +8,9 @@ import {
   Delete,
   UseGuards,
   HttpStatus,
+  UseInterceptors,
 } from '@nestjs/common';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 import { DistrictService } from './district.service';
 import { CreateDistrictDto } from './dto/create-district.dto';
 import { UpdateDistrictDto } from './dto/update-district.dto';
@@ -34,6 +36,7 @@ export class DistrictController {
   }
 
   @Public()
+  @UseInterceptors(CacheInterceptor)
   @Get()
   async findAll() {
     const data = await this.districtService.findAll();

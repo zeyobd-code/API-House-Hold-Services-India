@@ -6,7 +6,9 @@ import {
   Patch,
   Param,
   HttpStatus,
+  UseInterceptors,
 } from '@nestjs/common';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 import { CompanyBrandingService } from './company-branding.service';
 import { CreateCompanyBrandingDto } from './dto/create-company-branding.dto';
 import { UpdateCompanyBrandingDto } from './dto/update-company-branding.dto';
@@ -27,6 +29,7 @@ export class CompanyBrandingController {
   }
 
   @Public()
+  @UseInterceptors(CacheInterceptor)
   @Get()
   async getBranding() {
     const data = await this.brandingService.getBranding();
