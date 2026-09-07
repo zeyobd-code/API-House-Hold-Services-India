@@ -44,11 +44,44 @@ export class BookingService {
 
     const bookingData: any = {
       ...createBookingDto,
-      user: { id: Number(finalUserId) },
     };
 
+    // Safely validate client user existence
+    let validUserId: number | undefined = undefined;
+    if (finalUserId && !isNaN(Number(finalUserId))) {
+      try {
+        const u = await this.usersService.findOne(Number(finalUserId));
+        if (u) validUserId = u.id;
+      } catch {
+        this.logger.warn(`Specified user_id #${finalUserId} not found in database.`);
+      }
+    }
+
+    if (validUserId) {
+      bookingData.user = { id: validUserId };
+    } else {
+      const superAdmins = await this.usersService.findByRoleName(RoleType.SUPER_ADMIN);
+      if (superAdmins && superAdmins.length > 0) {
+        bookingData.user = { id: superAdmins[0].id };
+      } else {
+        throw new BadRequestException(`User ID ${finalUserId} not found. Please log in again.`);
+      }
+    }
+
+    // Safely validate vendor user existence
+    let validVendorId: number | undefined = undefined;
     if (createBookingDto.vendor_id && !isNaN(Number(createBookingDto.vendor_id))) {
-      bookingData.vendor = { id: Number(createBookingDto.vendor_id) };
+      const targetVendorId = Number(createBookingDto.vendor_id);
+      try {
+        const v = await this.usersService.findOne(targetVendorId);
+        if (v) validVendorId = v.id;
+      } catch {
+        this.logger.warn(`Specified vendor_id #${targetVendorId} not found in users table.`);
+      }
+    }
+
+    if (validVendorId) {
+      bookingData.vendor = { id: validVendorId };
     } else {
       delete bookingData.vendor;
     }
