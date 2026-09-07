@@ -16,15 +16,15 @@ export class GoogleAuthService {
     private readonly rolesService: RolesService,
     private readonly authService: AuthService,
   ) {
-    const clientId = this.configService.get<string>('CLIENT_ID');
-    const clientSecret = this.configService.get<string>('CLIENT_SECRET');
-    this.googleClient = new OAuth2Client(clientId, clientSecret);
+    const clientId = this.configService.get<string>('CLIENT_ID') || this.configService.get<string>('GOOGLE_CLIENT_ID') || process.env.CLIENT_ID;
+    const clientSecret = this.configService.get<string>('CLIENT_SECRET') || this.configService.get<string>('GOOGLE_CLIENT_SECRET') || process.env.CLIENT_SECRET;
+    this.googleClient = new OAuth2Client({ clientId, clientSecret });
   }
 
   async googleLoginWithToken(idToken: string) {
     let payload;
     try {
-      const clientId = this.configService.get<string>('CLIENT_ID');
+      const clientId = this.configService.get<string>('CLIENT_ID') || this.configService.get<string>('GOOGLE_CLIENT_ID') || process.env.CLIENT_ID;
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
         audience: clientId,
@@ -92,10 +92,10 @@ export class GoogleAuthService {
 
   async googleCallbackAuth(code: string, redirectUri: string) {
     try {
-      const clientId = this.configService.get<string>('CLIENT_ID');
-      const clientSecret = this.configService.get<string>('CLIENT_SECRET');
+      const clientId = this.configService.get<string>('CLIENT_ID') || this.configService.get<string>('GOOGLE_CLIENT_ID') || process.env.CLIENT_ID;
+      const clientSecret = this.configService.get<string>('CLIENT_SECRET') || this.configService.get<string>('GOOGLE_CLIENT_SECRET') || process.env.CLIENT_SECRET;
 
-      const oauth2Client = new OAuth2Client(clientId, clientSecret, redirectUri);
+      const oauth2Client = new OAuth2Client({ clientId, clientSecret, redirectUri });
       const { tokens } = await oauth2Client.getToken(code);
 
       if (!tokens.id_token) {

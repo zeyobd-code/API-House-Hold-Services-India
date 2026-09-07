@@ -47,6 +47,17 @@ export class AuthController {
     };
   }
 
+  @Get('google')
+  async googleAuthRedirect(@Res() res: Response) {
+    const clientId = process.env.CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'https://api.rajseba.in/api/auth/google/callback';
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
+      redirectUri
+    )}&response_type=code&scope=openid%20email%20profile&prompt=consent`;
+
+    return res.redirect(googleAuthUrl);
+  }
+
   @Post('google')
   @HttpCode(HttpStatus.OK)
   async googleLogin(@Body('idToken') idToken: string, @Body('token') token: string) {
@@ -66,6 +77,14 @@ export class AuthController {
   ) {
     const frontendUrl = process.env.FRONTEND_URL || 'https://rajseba.in';
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'https://api.rajseba.in/api/auth/google/callback';
+    const clientId = process.env.CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+
+    if (!code) {
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
+        redirectUri
+      )}&response_type=code&scope=openid%20email%20profile&prompt=consent`;
+      return res.redirect(googleAuthUrl);
+    }
 
     try {
       const data = await this.googleAuthService.googleCallbackAuth(code, redirectUri);
