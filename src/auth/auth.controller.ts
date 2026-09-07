@@ -18,7 +18,7 @@ import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
-@Controller('auth')
+@Controller(['auth', 'api/auth'])
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -60,7 +60,6 @@ export class AuthController {
   }
 
   @Get('google/callback')
-  @Get('/api/auth/google/callback')
   async googleCallback(
     @Query('code') code: string,
     @Res() res: Response,

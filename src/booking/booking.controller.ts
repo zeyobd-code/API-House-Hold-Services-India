@@ -17,7 +17,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { BookingStatus } from './entities/booking.entity';
 
-@Controller('bookings')
+@Controller(['bookings', 'api/bookings'])
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
 
