@@ -36,7 +36,7 @@ export class Booking {
   user: User;
 
   @Index()
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'vendor_id' })
   vendor: User;
 

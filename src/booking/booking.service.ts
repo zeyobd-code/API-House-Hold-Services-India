@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
@@ -38,16 +38,31 @@ export class BookingService {
     userReq?: any,
   ) {
     const finalUserId = createBookingDto.user_id || userId;
+    if (!finalUserId) {
+      throw new BadRequestException('User ID is required for placing a booking');
+    }
+
     const bookingData: any = {
       ...createBookingDto,
-      user: { id: finalUserId },
-      vendor: { id: createBookingDto.vendor_id },
-      service: createBookingDto.service_id
-        ? { id: createBookingDto.service_id }
-        : undefined,
+      user: { id: Number(finalUserId) },
     };
+
+    if (createBookingDto.vendor_id && !isNaN(Number(createBookingDto.vendor_id))) {
+      bookingData.vendor = { id: Number(createBookingDto.vendor_id) };
+    } else {
+      delete bookingData.vendor;
+    }
+
+    if (createBookingDto.service_id && !isNaN(Number(createBookingDto.service_id))) {
+      bookingData.service = { id: Number(createBookingDto.service_id) };
+    } else {
+      delete bookingData.service;
+    }
+
     delete bookingData.user_id;
     delete bookingData.service_id;
+    delete bookingData.vendor_id;
+    delete bookingData.package_id;
 
     if (userReq?.role?.toLowerCase().replace(/\s+/g, '') === 'agent') {
       bookingData.agent = { id: userId };
@@ -128,9 +143,20 @@ export class BookingService {
       bookingData.total_price = couponResult.final_price;
     }
 
-    const booking = this.bookingRepository.create(bookingData);
-    const saveResult = await this.bookingRepository.save(booking);
-    const savedBooking = Array.isArray(saveResult) ? saveResult[0] : saveResult;
+    let savedBooking: Booking;
+    try {
+      const booking = this.bookingRepository.create(bookingData);
+      const saveResult = await this.bookingRepository.save(booking);
+      savedBooking = Array.isArray(saveResult) ? saveResult[0] : saveResult;
+    } catch (error: any) {
+      this.logger.error(
+        `Error creating booking: ${error?.message || error}`,
+        error?.stack,
+      );
+      throw new BadRequestException(
+        `Failed to place booking: ${error?.driverError?.detail || error?.message || 'Database error'}`,
+      );
+    }
 
     const requesterRole =
       userReq?.role?.toLowerCase().replace(/\s+/g, '') || '';
@@ -377,7 +403,7 @@ export class BookingService {
     );
   }
 
-  private async notifyVendorAndSuperAdmin(bookingId: number, vendorId: number) {
+  private async notifyVendorAndSuperAdmin(bookingId: number, vendorId?: number) {
     const booking = await this.bookingRepository.findOne({
       where: { id: bookingId },
       relations: {

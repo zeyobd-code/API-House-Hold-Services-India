@@ -20,9 +20,9 @@ export class SubServiceItemDto {
 }
 
 export class CreateBookingDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
-  vendor_id: number;
+  vendor_id?: number;
 
   @IsOptional()
   @IsArray()
